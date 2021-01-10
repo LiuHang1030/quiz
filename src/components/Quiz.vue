@@ -1,5 +1,8 @@
 <template>
   <div class="quiz-page">
+    <div class="time-out">
+      {{ count }}
+    </div>
     <div class="progress">
       {{ nowIndex + 1 }} /{{ this.quizList.question.length }}
     </div>
@@ -34,8 +37,10 @@ export default {
   },
   data() {
     return {
+      count: 3,
       nowIndex: 0,
       quizFSM: null,
+      timer: null,
     };
   },
   created() {
@@ -63,15 +68,36 @@ export default {
         methods: {
           onNext(e) {
             console.log("onNext");
-            that.nowIndex++;
+            return new Promise((resolve, reject) => {
+              resolve();
+              console.log("动画时间");
+              that.nowIndex++;
+            });
           },
           onDone() {
             console.log("onDone");
             that.$emit("Finished");
           },
+
+          onTransition(lifecycle, arg1, arg2) {
+            //reset count
+            that.count = 3;
+            clearInterval(that.timer);
+            that.timer = setInterval(() => {
+              that.count--;
+              if (that.count == 0) {
+                clearInterval(that.timer);
+                if (this.can("done")) {
+                  this.done();
+                } else if (this.can("next")) {
+                  this.next();
+                }
+              }
+            }, 1000);
+          },
         },
       });
-      console.log(this.quizFSM.allTransitions());
+
       //   this.quizFSM.observe("onNext", function (e) {
       //     console.log(e);
       //   });
@@ -82,6 +108,7 @@ export default {
     step() {},
     optionClickHandle(quiz, option, index) {
       let isCorrectOption = option.value == quiz.answer;
+      console.log(this.quizFSM.can("next"));
       if (this.quizFSM.is(`${index + 1}`)) {
         if (this.quizFSM.can("done")) {
           this.quizFSM.done();
