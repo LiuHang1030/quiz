@@ -64,10 +64,16 @@ export default {
       console.log(quizTransitions);
       this.quizFSM = new StateMachine({
         init: "1",
-        transitions: quizTransitions,
+        transitions: [
+          {
+            name: "animate",
+            from: "*",
+            to: "*",
+          },
+        ].concat(quizTransitions),
         methods: {
-          onNext(e) {
-            console.log("onNext");
+          onNext(e) {},
+          onAnimate() {
             return new Promise((resolve, reject) => {
               resolve();
               console.log("动画时间");
@@ -77,23 +83,6 @@ export default {
           onDone() {
             console.log("onDone");
             that.$emit("Finished");
-          },
-
-          onTransition(lifecycle, arg1, arg2) {
-            //reset count
-            that.count = 3;
-            clearInterval(that.timer);
-            that.timer = setInterval(() => {
-              that.count--;
-              if (that.count == 0) {
-                clearInterval(that.timer);
-                if (this.can("done")) {
-                  this.done();
-                } else if (this.can("next")) {
-                  this.next();
-                }
-              }
-            }, 1000);
           },
         },
       });
